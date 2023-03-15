@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'my_splider',
+    'dataToSql',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +50,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # admin 界面的中文显示
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'my_splider.urls'
@@ -78,10 +81,11 @@ WSGI_APPLICATION = 'my_splider.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'spider1688_1.db'),
+        'NAME': os.path.join(BASE_DIR, 'spider1688_4.db'),
     }
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

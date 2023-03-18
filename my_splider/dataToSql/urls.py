@@ -5,4 +5,6 @@ from . import views
 urlpatterns = [
     path('sql/', views.sql_data),
     path('template/', views.template),
+    path('address/', views.address),
+    path('detail/', views.detail),
 ]

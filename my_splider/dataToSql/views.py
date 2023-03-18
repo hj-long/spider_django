@@ -30,6 +30,42 @@ def sql_data(request):
     # 将数据转换为json格式
     return Response(goods)
 
+# 读取地址信息
+@api_view(['GET'])
+def address(request):
+    # 从数据库中读取数据id前10条
+    goods_info = GoodsInfo.objects.filter(id__lte=10)
+    address = []
+    for i in goods_info:
+        address_info = i.address.split(' ')
+        item = {
+            'id': i.id,
+            'address': i.address,
+            'city': address_info[1],
+        }       
+        address.append(item)
+    # 将数据转换为json格式
+    return Response(address)
+
+# 读取商品详情信息
+@api_view(['GET'])
+def detail(request):
+    # 从数据库中读取数据id前10条
+    goods_info = GoodsInfo.objects.filter(id__in=[294, 1467, 1993, 2606, 2698])
+    # goods_info = GoodsInfo.objects.filter(id=294)
+    detail = []
+    for i in goods_info:
+        # 将数据转换为list
+        data = eval(i.detail)
+        if len(data) >= 25:
+            print(len(data), i.id)
+        item = {
+            'id': i.id,
+            'detail': i.detail,
+        }       
+        detail.append(item)
+    return Response(detail)
+
 
 def template(request):
     # 从数据库中读取数据

@@ -1,11 +1,9 @@
 from django.shortcuts import render
 # from django.http import HttpResponse
-from dataToSql.models import GoodsInfo
+from dataToSql.models import GoodsInfo, GoodsDetail
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
-
 
 # Create your views here.
 # 从数据库中读取数据, 返回json格式数据
@@ -50,21 +48,26 @@ def address(request):
 # 读取商品详情信息
 @api_view(['GET'])
 def detail(request):
-    # 从数据库中读取数据id前10条
-    goods_info = GoodsInfo.objects.filter(id__in=[294, 1467, 1993, 2606, 2698])
-    # goods_info = GoodsInfo.objects.filter(id=294)
-    detail = []
-    for i in goods_info:
-        # 将数据转换为list
-        data = eval(i.detail)
-        if len(data) >= 25:
-            print(len(data), i.id)
-        item = {
-            'id': i.id,
-            'detail': i.detail,
-        }       
-        detail.append(item)
-    return Response(detail)
+    pass
+
+# 读取商品详情信息(统计)
+@api_view(['GET'])
+def detail_count(request):
+    detail = GoodsDetail.objects.all()
+    detail_count = {
+        "齿轮减速机": 0,
+        "行星减速机": 0,
+        "摆线针轮减速机": 0,
+    }
+    for i in detail:
+        if i.type == "齿轮减速机":
+            detail_count["齿轮减速机"] += 1
+        elif i.type == "行星减速机":
+            detail_count["行星减速机"] += 1
+        elif i.type == "摆线针轮减速机":
+            detail_count["摆线针轮减速机"] += 1
+    # 将数据转换为json格式
+    return Response(detail_count)
 
 
 def template(request):

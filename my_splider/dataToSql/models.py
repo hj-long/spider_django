@@ -16,8 +16,8 @@ class GoodsInfo(models.Model):
     detail = models.CharField(blank=True, null=True, max_length=1000)
     address = models.CharField(blank=True, null=True, max_length=200)
     factory_name = models.CharField(blank=True, null=True, max_length=100)
-    def __str__(self):
-        return self.title
+    def __int__(self):
+        return self.id
 
     class Meta:
         managed = False
@@ -49,9 +49,9 @@ class GoodsDetail(models.Model):
     sales_area = models.CharField(blank=True, null=True, max_length=100)
     is_brand = models.CharField(blank=True, null=True, max_length=100)
     is_cross = models.CharField(blank=True, null=True, max_length=100)
-    speed_ratio_1 = models.CharField(blank=True, null=True, max_length=100)
-    speed_ratio_2 = models.CharField(blank=True, null=True, max_length=100)
-    speed_ratio_3 = models.CharField(blank=True, null=True, max_length=100)
+    # speed_ratio_1 = models.CharField(blank=True, null=True, max_length=100)
+    # speed_ratio_2 = models.CharField(blank=True, null=True, max_length=100)
+    # speed_ratio_3 = models.CharField(blank=True, null=True, max_length=100)
     # 额定转矩
     rating_torque = models.CharField(blank=True, null=True, max_length=100)
     # 额定转速
@@ -61,31 +61,8 @@ class GoodsDetail(models.Model):
     # 额定电流
     rating_A = models.CharField(blank=True, null=True, max_length=100)
 
-    # kuajing = models.CharField(blank=True, null=True, max_length=100)
-    # danwei_weight = models.CharField(blank=True, null=True, max_length=100)
-    # dinghuo = models.CharField(blank=True, null=True, max_length=100)
-    # jiagong = models.CharField(blank=True, null=True, max_length=100)
-    # num = models.CharField(blank=True, null=True, max_length=100)
-    # leibie = models.CharField(blank=True, null=True, max_length=100)
-    # chilunleibie = models.CharField(blank=True, null=True, max_length=100)
-    # anzhuang = models.CharField(blank=True, null=True, max_length=100)
-    # buju = models.CharField(blank=True, null=True, max_length=100)
-    # chilunyingdu = models.CharField(blank=True, null=True, max_length=100)
-    # yongtu = models.CharField(blank=True, null=True, max_length=100)
-    # pinpai = models.CharField(blank=True, null=True, max_length=100)
-    # xinghao = models.CharField(blank=True, null=True, max_length=100)
-    # shuru = models.CharField(blank=True, null=True, max_length=100)
-    # shuchu = models.CharField(blank=True, null=True, max_length=100)
-    # endinggonglv = models.CharField(blank=True, null=True, max_length=100)
-    # niuju = models.CharField(blank=True, null=True, max_length=100)
-    # fanwei = models.CharField(blank=True, null=True, max_length=100)
-    # jishu = models.CharField(blank=True, null=True, max_length=100)
-    # guige = models.CharField(blank=True, null=True, max_length=100)
-    # chukou = models.CharField(blank=True, null=True, max_length=100)
-    # jiansubi = models.CharField(blank=True, null=True, max_length=100)
-    # chuangdongbi = models.CharField(blank=True, null=True, max_length=100)
-    def __str__(self):
-        return self.leibie
+    def __int__(self):
+        return self.id
 
     class Meta:
         managed = False

@@ -7,4 +7,5 @@ urlpatterns = [
     path('template/', views.template),
     path('address/', views.address),
     path('detail/', views.detail),
+    path('count/', views.detail_count),
 ]

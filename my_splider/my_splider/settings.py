@@ -26,7 +26,7 @@ SECRET_KEY = ')dgpt-40l*y#hw8)+!xkk2pm8l3rzhlx0oy40)u*-v^klns)3!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

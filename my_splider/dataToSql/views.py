@@ -4,6 +4,7 @@ from dataToSql.models import GoodsInfo, GoodsDetail
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from django.db.models import Count
 
 # Create your views here.
 # 从数据库中读取数据, 返回json格式数据
@@ -28,22 +29,24 @@ def sql_data(request):
     # 将数据转换为json格式
     return Response(goods)
 
-# 读取地址信息
+# 读取城市信息进行返回统计结果
 @api_view(['GET'])
 def address(request):
-    # 从数据库中读取数据id前10条
-    goods_info = GoodsInfo.objects.filter(id__lte=10)
-    address = []
-    for i in goods_info:
-        address_info = i.address.split(' ')
-        item = {
-            'id': i.id,
-            'address': i.address,
-            'city': address_info[1],
-        }       
-        address.append(item)
-    # 将数据转换为json格式
-    return Response(address)
+    info = GoodsInfo.objects.all()
+    address_count = {}
+    for i in info:
+        # 对address属性进行分割提取，再进行统计
+        address = i.address.split(" ")
+        if len(address) < 2:
+            print(i.id, '地址信息不完整')
+        else:
+            city = address[1]
+            if city in address_count:
+                address_count[city] += 1
+            else:
+                address_count[city] = 1
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
+    # return Response(address_count)
 
 # 读取商品详情信息
 @api_view(['GET'])
@@ -67,7 +70,7 @@ def detail_count(request):
         elif i.type == "摆线针轮减速机":
             detail_count["摆线针轮减速机"] += 1
     # 将数据转换为json格式
-    return Response(detail_count)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=detail_count)
 
 
 def template(request):

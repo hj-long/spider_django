@@ -48,9 +48,26 @@ def address(request):
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
     # return Response(address_count)
 
-# 读取商品详情信息
+# 根据参数统计返回一个范围内的数据
 @api_view(['GET'])
-def detail(request):
+def info_data(request):
+    # 读取一定范围的额定功率
+    power_num = 200
+    info = GoodsDetail.objects.filter(rating_power__range=[power_num-100, power_num+100])
+    info_data = []
+    for i in info:
+        power = i.rating_power
+        num = power.replace("（kw）", "")
+        if len(num) >= len(str(power_num-100)):
+            item = {
+                'id': i.id,
+                'rating_power': num,
+                'type': i.type,
+            }
+            info_data.append(item)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
+    
     pass
 
 # 读取商品详情信息(统计)

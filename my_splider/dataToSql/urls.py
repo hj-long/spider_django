@@ -6,6 +6,6 @@ urlpatterns = [
     path('sql/', views.sql_data),
     path('template/', views.template),
     path('address/', views.address),
-    path('detail/', views.detail),
+    path('info_data/', views.info_data),
     path('count/', views.detail_count),
 ]

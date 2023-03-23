@@ -46,19 +46,21 @@ def address(request):
             else:
                 address_count[city] = 1
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
-    # return Response(address_count)
 
 # 根据参数统计返回一个范围内的数据
 @api_view(['GET'])
-def info_data(request):
+def g_power(request):
     # 读取一定范围的额定功率
-    power_num = 200
-    info = GoodsDetail.objects.filter(rating_power__range=[power_num-100, power_num+100])
+    power = request.GET.get('power')
+    if power == None:
+        power = 200
+    info = GoodsDetail.objects.filter(rating_power__range=[power-100, power+100])
     info_data = []
     for i in info:
-        power = i.rating_power
-        num = power.replace("（kw）", "")
-        if len(num) >= len(str(power_num-100)):
+        data = i.rating_power
+        # 对数据字符串进行处理
+        num = str_process(data)
+        if num and num >= (power-100) and num <= (power+100):
             item = {
                 'id': i.id,
                 'rating_power': num,
@@ -67,8 +69,35 @@ def info_data(request):
             info_data.append(item)
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
 
-    
-    pass
+# 对数据字符串进行处理
+def str_process(str):
+    flag = True
+    # 去除空格
+    str = str.replace(" ", "")
+    num = str.replace("（kw）", "")
+    # 如果有-或者~或者/或者、，则取中间值
+    try:
+        if "-" in num:
+            num = num.split("-")
+            num = (float(num[0]) + float(num[1])) / 2
+        elif "~" in num:
+            num = num.split("~")
+            num = (float(num[0]) + float(num[1])) / 2
+        elif "/" in num:
+            num = num.split("/")
+            num = (float(num[0]) + float(num[1])) / 2
+        elif "、" in num:
+            num = num.split("、")
+            num = (float(num[0]) + float(num[1])) / 2
+        # 如果有小数点，则取整数部分
+        if "." in num:
+            num = int(float(num))
+        # 转为int类型，失败就是有字母
+        num = int(num)
+    except:
+        flag = False
+    if flag and num <= 10000:
+        return num
 
 # 读取商品详情信息(统计)
 @api_view(['GET'])

@@ -47,7 +47,7 @@ def address(request):
                 address_count[city] = 1
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
 
-# 根据参数统计返回一个范围内的数据
+# 根据参数统计返回一个范围内的额定功率
 @api_view(['GET'])
 def g_power(request):
     # 读取一定范围的额定功率
@@ -59,7 +59,8 @@ def g_power(request):
     for i in info:
         data = i.rating_power
         # 对数据字符串进行处理
-        num = str_process(data)
+        num = data.replace("（kw）", "")
+        num = str_process(num)
         if num and num >= (power-100) and num <= (power+100):
             item = {
                 'id': i.id,
@@ -73,8 +74,7 @@ def g_power(request):
 def str_process(str):
     flag = True
     # 去除空格
-    str = str.replace(" ", "")
-    num = str.replace("（kw）", "")
+    num = str.replace(" ", "")
     # 如果有-或者~或者/或者、，则取中间值
     try:
         if "-" in num:
@@ -96,8 +96,32 @@ def str_process(str):
         num = int(num)
     except:
         flag = False
-    if flag and num <= 10000:
+    if flag :
         return num
+
+# 获取输入转速
+@api_view(['GET'])
+def g_inputRev(request):
+    # 获取参数
+    speed = request.GET.get('speed')
+    if speed == None:
+        speed = 1000
+    info = GoodsDetail.objects.filter(input_rev__range=[1, speed+500])
+    info_data = []
+    for i in info:
+        data = i.input_rev
+        # 对数据字符串进行处理
+        num = data.replace("（rpm）", "")
+        num = str_process(num)
+        if num and num >= (speed-500) and num <= (speed+500):
+            item = {
+                'id': i.id,
+                'output_speed': num,
+                'type': i.type,
+            }
+            info_data.append(item)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
 
 # 读取商品详情信息(统计)
 @api_view(['GET'])

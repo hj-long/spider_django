@@ -8,4 +8,5 @@ urlpatterns = [
     path('address/', views.address),
     path('g_power/', views.g_power),
     path('count/', views.detail_count),
+    path('g_inputRev/', views.g_inputRev),
 ]

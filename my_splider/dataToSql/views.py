@@ -103,7 +103,7 @@ def str_process(str):
 @api_view(['GET'])
 def g_inputRev(request):
     # 获取参数
-    speed = request.GET.get('speed')
+    speed = request.GET.get('input_rev')
     if speed == None:
         speed = 1000
     info = GoodsDetail.objects.filter(input_rev__range=[1, speed+500])
@@ -117,6 +117,52 @@ def g_inputRev(request):
             item = {
                 'id': i.id,
                 'output_speed': num,
+                'type': i.type,
+            }
+            info_data.append(item)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
+# 获取输出转速
+@api_view(['GET'])
+def g_outputRev(request):
+    # 获取参数
+    speed = request.GET.get('output_rev')
+    if speed == None:
+        speed = 500
+    info = GoodsDetail.objects.filter(output_rev__range=[speed-100, speed+200])
+    info_data = []
+    for i in info:
+        data = i.output_rev
+        # 对数据字符串进行处理
+        num = data.replace("（rpm）", "")
+        num = str_process(num)
+        if num and num >= (speed-100) and num <= (speed+200):
+            item = {
+                'id': i.id,
+                'output_speed': num,
+                'type': i.type,
+            }
+            info_data.append(item)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
+# 获取许用扭矩
+@api_view(['GET'])
+def g_torque(request):
+    # 获取参数
+    torque = request.GET.get('torque')
+    if torque == None:
+        torque = 100
+    info = GoodsDetail.objects.filter(allowable_torque__range=[1, torque+200])
+    info_data = []
+    for i in info:
+        data = i.allowable_torque
+        # 对数据字符串进行处理
+        num = data.replace("（N.m）", "")
+        num = str_process(num)
+        if num and num >= (torque-50) and num <= (torque+1000):
+            item = {
+                'id': i.id,
+                'torque': num,
                 'type': i.type,
             }
             info_data.append(item)

@@ -79,7 +79,11 @@ def str_process(str):
     try:
         if "-" in num:
             num = num.split("-")
-            num = (float(num[0]) + float(num[1])) / 2
+            # 如果只有一个值，则取这个值
+            if num[0] == "":
+                num = float(num[1])
+            else:
+                num = (float(num[0]) + float(num[1])) / 2
         elif "~" in num:
             num = num.split("~")
             num = (float(num[0]) + float(num[1])) / 2
@@ -89,6 +93,13 @@ def str_process(str):
         elif "、" in num:
             num = num.split("、")
             num = (float(num[0]) + float(num[1])) / 2
+        # 如果有 > 或者 < 则取后面的值
+        elif ">" in num:
+            num = num.split(">")
+            num = float(num[1])
+        elif "<" in num:
+            num = num.split("<")
+            num = float(num[1])
         # 如果有小数点，则取整数部分
         if "." in num:
             num = int(float(num))
@@ -167,6 +178,34 @@ def g_torque(request):
             }
             info_data.append(item)
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
+
+# 获取减速比
+@api_view(['GET'])
+def g_ratio(request):
+    # 获取参数
+    ratio = request.GET.get('ratio')
+    if ratio == None:
+        ratio = 10
+    info = GoodsDetail.objects.filter(slow_ratio__range=[1, ratio+5])
+    info_data = []
+    for i in info:
+        data = i.slow_ratio
+        # 对数据字符串进行处理
+        if data != None:
+            try:
+                num = int(data)
+            except:
+                num = 0
+            if num and num >= (ratio-5) and num <= (ratio+5):
+                item = {
+                    'id': i.id,
+                    'ratio': num,
+                    'type': i.type,
+                }
+                info_data.append(item)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
+
 
 
 # 读取商品详情信息(统计)

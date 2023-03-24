@@ -89,6 +89,8 @@ def str_process(str):
             num = (float(num[0]) + float(num[1])) / 2
         elif "/" in num:
             num = num.split("/")
+            if num[0] == "":
+                num = float(num[1])
             num = (float(num[0]) + float(num[1])) / 2
         elif "、" in num:
             num = num.split("、")
@@ -100,15 +102,14 @@ def str_process(str):
         elif "<" in num:
             num = num.split("<")
             num = float(num[1])
-        # 如果有小数点，则取整数部分
-        if "." in num:
-            num = int(float(num))
         # 转为int类型，失败就是有字母
         num = int(num)
     except:
         flag = False
     if flag :
         return num
+    else:
+        return 0
 
 # 获取输入转速
 @api_view(['GET'])

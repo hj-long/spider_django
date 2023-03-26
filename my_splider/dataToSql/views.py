@@ -214,19 +214,34 @@ def g_ratio(request):
 def detail_count(request):
     detail = GoodsDetail.objects.all()
     detail_count = {
-        "齿轮减速机": 0,
         "行星减速机": 0,
         "摆线针轮减速机": 0,
+        "蜗轮蜗杆减速机": 0,
+        '其他类型': 0,
     }
     for i in detail:
-        if i.type == "齿轮减速机":
-            detail_count["齿轮减速机"] += 1
-        elif i.type == "行星减速机":
-            detail_count["行星减速机"] += 1
-        elif i.type == "摆线针轮减速机":
-            detail_count["摆线针轮减速机"] += 1
+        data = i.type
+        if data:
+            if "蜗轮" in i.type or "蜗杆" in i.type:
+                detail_count["蜗轮蜗杆减速机"] += 1
+            elif "摆线" in i.type or "针轮" in i.type:
+                detail_count["摆线针轮减速机"] += 1
+            elif "齿轮减" in i.type or "行星" in i.type:
+                detail_count["行星减速机"] += 1
+            else:
+                detail_count["其他类型"] += 1
+        else:
+            detail_count["其他类型"] += 1
+
+    data = [
+            { "name": "行星减速机", "value": detail_count["行星减速机"] },
+            { "name": "摆线针轮减速机", "value": detail_count["摆线针轮减速机"] },
+            { "name": "蜗轮蜗杆减速机", "value": detail_count["蜗轮蜗杆减速机"] },
+            { "name": "其他类型", "value": detail_count["其他类型"] }
+        ]
+    length = len(detail)
     # 将数据转换为json格式
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=detail_count)
+    return Response(headers={'Access-Control-Allow-Origin': '*'}, data={"data": data, "length": length})
 
 
 def template(request):

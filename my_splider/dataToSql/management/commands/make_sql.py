@@ -13,14 +13,21 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # 从数据库中读取处理数据
         goods_info = GoodsDetail.objects.all()
+
+
+
+
+
+
+
         # 处理 allowable_torque 的数据
-        for i in goods_info:
-            allowable_torque = i.allowable_torque
-            # 如果是空值，直接赋值为0
-            if not allowable_torque:
-                i.allowable_torque = 0
-                i.save()
-            else:
+        # for i in goods_info:
+        #     allowable_torque = i.allowable_torque
+        #     # 如果是空值，直接赋值为0
+        #     if not allowable_torque:
+        #         i.allowable_torque = 0
+        #         i.save()
+        #     else:
                 # # 正则提取（N.m）前面的数据
                 # data = re.findall(r'(.*).N.m', allowable_torque)
                 # # 如果有数据，就处理
@@ -41,28 +48,26 @@ class Command(BaseCommand):
                 #         else:
                 #             i.allowable_torque = data
                 #     i.save() 
-
                 # 特殊情况处理
-                data = allowable_torque.replace("NM", "")
-                data = data.replace("N.M", "")
-                data = data.replace("N·m", "")
-                data = data.replace("N.m", "")
-                data = data.replace("Nm", "")
-                data = data.replace("Nm", "")
-                data = data.replace("≤", "")
-                data = data.replace("≥", "")
-                data = data.replace("N", "")
-                data1 = str_process(data)
-                if data1 != 0:
-                    i.allowable_torque = data1
-                else:
-                    # 正则判断如果不存在数字0-9，就赋值为0
-                    if not re.search(r'[0-9]', data):
-                        i.allowable_torque = 0
-                    else:
-                        i.allowable_torque = data
-                i.save()
-
+                # data = allowable_torque.replace("NM", "")
+                # data = data.replace("N.M", "")
+                # data = data.replace("N·m", "")
+                # data = data.replace("N.m", "")
+                # data = data.replace("Nm", "")
+                # data = data.replace("Nm", "")
+                # data = data.replace("≤", "")
+                # data = data.replace("≥", "")
+                # data = data.replace("N", "")
+                # data1 = str_process(data)
+                # if data1 != 0:
+                #     i.allowable_torque = data1
+                # else:
+                #     # 正则判断如果不存在数字0-9，就赋值为0
+                #     if not re.search(r'[0-9]', data):
+                #         i.allowable_torque = 0
+                #     else:
+                #         i.allowable_torque = data
+                # i.save()
 
 
         # 处理rating_power数据，将单位去掉

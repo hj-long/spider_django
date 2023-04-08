@@ -29,6 +29,33 @@ def sql_data(request):
     # 将数据转换为json格式
     return Response(goods)
 
+
+@api_view(['GET'])
+def get_data(request):
+    # 获取参数
+    power = request.GET.get('power')
+    if power == None:
+        return Response('参数错误')
+    # 读取一定范围的额定功率
+    power = int(power)
+    infos = GoodsDetail.objects.all()
+    info_data = []
+    for i in infos:
+        try:
+            rating_power = float(i.rating_power)
+            if rating_power >= (power-50) and rating_power <= (power+50):
+                item = {
+                    "id": i.id,
+                    "power_data": i.rating_power,
+                    "input_rev": i.input_rev,
+                    "output_rev": i.output_rev,
+                    "slow_ratio": i.slow_ratio,
+                }
+                info_data.append(item)
+        except:
+            pass
+    return Response(info_data)
+
 # 读取城市信息进行返回统计结果
 @api_view(['GET'])
 def address(request):

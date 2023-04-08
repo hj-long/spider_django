@@ -16,10 +16,6 @@ class Command(BaseCommand):
 
 
 
-
-
-
-
         # 处理 allowable_torque 的数据
         # for i in goods_info:
         #     allowable_torque = i.allowable_torque

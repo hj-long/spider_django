@@ -12,4 +12,5 @@ urlpatterns = [
     path('g_outputRev/', views.g_outputRev),
     path('g_torque/', views.g_torque),
     path('g_ratio/', views.g_ratio),
+    path('get_data/', views.get_data),
 ]

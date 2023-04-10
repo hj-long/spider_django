@@ -29,32 +29,95 @@ def sql_data(request):
     # 将数据转换为json格式
     return Response(goods)
 
-
 @api_view(['GET'])
 def get_data(request):
     # 获取参数
-    power = request.GET.get('power')
-    if power == None:
+    param = request.GET
+    if param == None or len(param) > 1:
         return Response('参数错误')
-    # 读取一定范围的额定功率
-    power = int(power)
+    
+    # 参数处理范围
+    val = 0
+    name = ''
+    # 读取参数
+    for i in param:
+        print(i, param[i])
+        if i == 'power':
+            power = param[i]
+            # 读取一定范围的额定功率
+            val = int(power)
+            name = 'rating_power'
+        elif i == 'input_rev':
+            input_rev = param[i]
+            # 读取一定范围的额定输入转速
+            val = int(input_rev)
+            name = 'input_rev'
+    
     infos = GoodsDetail.objects.all()
     info_data = []
     for i in infos:
-        try:
-            rating_power = float(i.rating_power)
-            if rating_power >= (power-50) and rating_power <= (power+50):
-                item = {
-                    "id": i.id,
-                    "power_data": i.rating_power,
-                    "input_rev": i.input_rev,
-                    "output_rev": i.output_rev,
-                    "slow_ratio": i.slow_ratio,
-                }
-                info_data.append(item)
-        except:
-            pass
-    return Response(info_data)
+        if name == 'rating_power':
+            try:
+                rating_power = float(i.rating_power)
+                if rating_power >= (val-5) and rating_power <= (val+5):
+                    good = GoodsInfo.objects.get(id=i.id)
+                    item = {
+                        "id": i.id,
+                        "power_data": i.rating_power,
+                        "input_rev": i.input_rev,
+                        "output_rev": i.output_rev,
+                        "slow_ratio": i.slow_ratio,
+                        "sale_sum": good.sale_sum,
+                        "price": good.price,
+                    }
+                    info_data.append(item)
+            except:
+                pass
+
+    # 对数据进行统计 {
+    #   "power_data": {
+    #       "0-5": 0,
+    #       "5-10": 0,
+    #       "10-15": 0,
+    #    },
+    #   ....
+    # }
+    count_data = {
+        "额定功率": {},
+        "输入转速": {},
+        "输出转速": {},
+        "减速比": {},
+        "价格": {},
+    }
+
+    for i in info_data:
+        power_data = i['power_data']
+        input_rev = i['input_rev']
+        output_rev = i['output_rev']
+        slow_ratio = i['slow_ratio']
+        sale_sum = i['sale_sum']
+        # 对额定功率进行统计
+        if power_data != None:
+            count_data['额定功率'][power_data] = count_data['额定功率'].get(power_data, 0) + 1
+        # 对输入转速进行统计
+        if input_rev != None:
+            count_data['输入转速'][input_rev] = count_data['输入转速'].get(input_rev, 0) + 1
+        # 对输出转速进行统计
+        if output_rev != None:
+            count_data['输出转速'][output_rev] = count_data['输出转速'].get(output_rev, 0) + 1
+        # 对减速比进行统计
+        if slow_ratio != None:
+            count_data['减速比'][slow_ratio] = count_data['减速比'].get(slow_ratio, 0) + 1
+        # 对价格进行统计
+        if sale_sum != None:
+            if sale_sum == '0':
+                sale_sum = '成交0+元'
+            count_data['价格'][sale_sum] = count_data['价格'].get(sale_sum, 0) + 1
+
+    return Response({
+        'data': info_data,
+        'count': count_data,
+    })
 
 # 读取城市信息进行返回统计结果
 @api_view(['GET'])
@@ -73,29 +136,6 @@ def address(request):
             else:
                 address_count[city] = 1
     return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
-
-# 根据参数统计返回一个范围内的额定功率
-@api_view(['GET'])
-def g_power(request):
-    # 读取一定范围的额定功率
-    power = request.GET.get('power')
-    if power == None:
-        power = 200
-    info = GoodsDetail.objects.filter(rating_power__range=[power-100, power+100])
-    info_data = []
-    for i in info:
-        data = i.rating_power
-        # 对数据字符串进行处理
-        num = data.replace("（kw）", "")
-        num = str_process(num)
-        if num and num >= (power-100) and num <= (power+100):
-            item = {
-                'id': i.id,
-                'rating_power': num,
-                'type': i.type,
-            }
-            info_data.append(item)
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
 
 # 对数据字符串进行处理
 def str_process(str):
@@ -137,103 +177,6 @@ def str_process(str):
         return num
     else:
         return 0
-
-# 获取输入转速
-@api_view(['GET'])
-def g_inputRev(request):
-    # 获取参数
-    speed = request.GET.get('input_rev')
-    if speed == None:
-        speed = 1000
-    info = GoodsDetail.objects.filter(input_rev__range=[1, speed+500])
-    info_data = []
-    for i in info:
-        data = i.input_rev
-        # 对数据字符串进行处理
-        num = data.replace("（rpm）", "")
-        num = str_process(num)
-        if num and num >= (speed-500) and num <= (speed+500):
-            item = {
-                'id': i.id,
-                'output_speed': num,
-                'type': i.type,
-            }
-            info_data.append(item)
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
-
-# 获取输出转速
-@api_view(['GET'])
-def g_outputRev(request):
-    # 获取参数
-    speed = request.GET.get('output_rev')
-    if speed == None:
-        speed = 500
-    info = GoodsDetail.objects.filter(output_rev__range=[speed-100, speed+200])
-    info_data = []
-    for i in info:
-        data = i.output_rev
-        # 对数据字符串进行处理
-        num = data.replace("（rpm）", "")
-        num = str_process(num)
-        if num and num >= (speed-100) and num <= (speed+200):
-            item = {
-                'id': i.id,
-                'output_speed': num,
-                'type': i.type,
-            }
-            info_data.append(item)
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
-
-# 获取许用扭矩
-@api_view(['GET'])
-def g_torque(request):
-    # 获取参数
-    torque = request.GET.get('torque')
-    if torque == None:
-        torque = 100
-    info = GoodsDetail.objects.filter(allowable_torque__range=[1, torque+200])
-    info_data = []
-    for i in info:
-        data = i.allowable_torque
-        # 对数据字符串进行处理
-        num = data.replace("（N.m）", "")
-        num = str_process(num)
-        if num and num >= (torque-50) and num <= (torque+1000):
-            item = {
-                'id': i.id,
-                'torque': num,
-                'type': i.type,
-            }
-            info_data.append(item)
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
-
-
-# 获取减速比
-@api_view(['GET'])
-def g_ratio(request):
-    # 获取参数
-    ratio = request.GET.get('ratio')
-    if ratio == None:
-        ratio = 10
-    info = GoodsDetail.objects.filter(slow_ratio__range=[1, ratio+5])
-    info_data = []
-    for i in info:
-        data = i.slow_ratio
-        # 对数据字符串进行处理
-        if data != None:
-            try:
-                num = int(data)
-            except:
-                num = 0
-            if num and num >= (ratio-5) and num <= (ratio+5):
-                item = {
-                    'id': i.id,
-                    'ratio': num,
-                    'type': i.type,
-                }
-                info_data.append(item)
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=info_data)
-
 
 
 # 读取商品详情信息(统计)

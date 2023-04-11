@@ -1,10 +1,10 @@
 from django.shortcuts import render
 # from django.http import HttpResponse
 from dataToSql.models import GoodsInfo, GoodsDetail
-import json
+# import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.db.models import Count
+# from django.db.models import Count
 
 # Create your views here.
 # 从数据库中读取数据, 返回json格式数据

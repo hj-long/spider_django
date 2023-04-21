@@ -1,10 +1,13 @@
 from django.shortcuts import render
-# from django.http import HttpResponse
+from django.http import HttpResponse
 from dataToSql.models import GoodsInfo, GoodsDetail
 # import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 # from django.db.models import Count
+import wordcloud
+import matplotlib.pyplot as plt
+import jieba
 
 # Create your views here.
 # 从数据库中读取数据, 返回json格式数据
@@ -135,7 +138,7 @@ def address(request):
                 address_count[city] += 1
             else:
                 address_count[city] = 1
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data=address_count)
+    return Response(data=address_count)
 
 # 对数据字符串进行处理
 def str_process(str):
@@ -184,34 +187,40 @@ def str_process(str):
 def detail_count(request):
     detail = GoodsDetail.objects.all()
     detail_count = {
-        "行星减速机": 0,
+        "圆柱齿轮减速机": 0,
         "摆线针轮减速机": 0,
-        "蜗轮蜗杆减速机": 0,
+        "圆锥齿轮减速机": 0,
+        "行星齿轮减速机": 0,
         '其他类型': 0,
     }
     for i in detail:
-        data = i.type
-        if data:
-            if "蜗轮" in i.type or "蜗杆" in i.type:
-                detail_count["蜗轮蜗杆减速机"] += 1
-            elif "摆线" in i.type or "针轮" in i.type:
+        data = i.wheel_type
+        if data != None:
+            if "圆" in data:
+                detail_count["圆柱齿轮减速机"] += 1
+            elif "针轮" in data:
                 detail_count["摆线针轮减速机"] += 1
-            elif "齿轮减" in i.type or "行星" in i.type:
-                detail_count["行星减速机"] += 1
+            elif "锥" in data:
+                detail_count["圆锥齿轮减速机"] += 1
+            elif "行星" in data:
+                detail_count["行星齿轮减速机"] += 1
+            elif "斜" in data:
+                detail_count["圆锥齿轮减速机"] += 1
             else:
                 detail_count["其他类型"] += 1
         else:
             detail_count["其他类型"] += 1
 
     data = [
-            { "name": "行星减速机", "value": detail_count["行星减速机"] },
-            { "name": "摆线针轮减速机", "value": detail_count["摆线针轮减速机"] },
-            { "name": "蜗轮蜗杆减速机", "value": detail_count["蜗轮蜗杆减速机"] },
-            { "name": "其他类型", "value": detail_count["其他类型"] }
+        {"name": "圆柱齿轮减速机", "value": detail_count["圆柱齿轮减速机"]},
+        {"name": "摆线针轮减速机", "value": detail_count["摆线针轮减速机"]},
+        {"name": "圆锥齿轮减速机", "value": detail_count["圆锥齿轮减速机"]},
+        {"name": "行星齿轮减速机", "value": detail_count["行星齿轮减速机"]},
+        {"name": "其他类型", "value": detail_count["其他类型"]},
         ]
     length = len(detail)
     # 将数据转换为json格式
-    return Response(headers={'Access-Control-Allow-Origin': '*'}, data={"data": data, "length": length})
+    return Response(data={"data": data, "length": length})
 
 
 def template(request):
@@ -221,3 +230,31 @@ def template(request):
     print(goods_info[0].price)
     # 传递数据到模板
     return render(request, 'sql_data.html')
+
+
+# 返回词云图片
+@api_view(['GET'])
+def word_cloud(request):
+    # 读取数据库中所有的 use_scope 字段的数据
+    data = GoodsDetail.objects.values_list('use_scope')
+    # 读取数据
+    text = ""
+    for item in data:
+        if item[0] is not None:
+            # item[0]格式为 食品、纺织、冶金 或者 撕碎机,皮带机，矿山设备，电厂，水泥厂 需要去除逗号和数字，并且分词
+            if item[0].isdigit():
+                continue
+            text += ' '.join(jieba.cut(item[0].replace(',', '').replace('，', '').
+                                       replace('、', '').replace('等行业', '').replace('等领域', '').replace('等', '').
+                                            replace('等', '').replace(' ', '').replace('（', '').replace('）', '').
+                                                replace('(', '').replace(')', '')))
+    # 生成词云
+    wc = wordcloud.WordCloud(
+        font_path='C:\Windows\Fonts\simhei.ttf', width=1000, height=800, background_color='white',
+        collocations=False
+    )
+    wc.generate(text)
+    # 保存图片
+    wc.to_file('upload/word_cloud.png')
+    # 返回图片地址
+    return Response(data='http://127.0.0.1:8000/upload/word_cloud.png')

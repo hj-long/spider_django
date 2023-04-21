@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'my_splider.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'spider1688_4.db'),
+        'NAME': os.path.join(BASE_DIR, 'spider_1688_1.db'),
     }
 }
 
@@ -127,6 +127,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# 媒体资源文件夹，自己在项目目录下新建文件夹upload即可，存放用户上传的图片等东西
+MEDIA_URL = 'upload/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'upload').replace('\\','/')
 
 # CORS 允许访问的白名单
 

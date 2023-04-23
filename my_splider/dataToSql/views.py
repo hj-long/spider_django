@@ -1,21 +1,25 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from dataToSql.models import GoodsInfo, GoodsDetail
-# import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-# from django.db.models import Count
 import wordcloud
 import matplotlib.pyplot as plt
 import jieba
+from django.core.paginator import Paginator
+
+
 
 # Create your views here.
 # 从数据库中读取数据, 返回json格式数据
 @api_view(['GET'])
 def sql_data(request):
-    # 从数据库中读取数据id前10条
-    goods_info = GoodsInfo.objects.filter(id__lte=10)
+    # 从数据库中读取数据id前100条
+    goods_info = GoodsInfo.objects.filter(id__lte=100)
     goods = []
+    # 分页
+    paginator_obj = Paginator(goods_info, 10)
+    page = request.GET.get('page')
+    goods_info = paginator_obj.get_page(page)
     for i in goods_info:
         item = {
             'id': i.id,
@@ -28,7 +32,6 @@ def sql_data(request):
             'factory_name': i.factory_name,
         }
         goods.append(item)
-    
     # 将数据转换为json格式
     return Response(goods)
 
@@ -237,6 +240,7 @@ def template(request):
 def word_cloud(request):
     # 读取数据库中所有的 use_scope 字段的数据
     data = GoodsDetail.objects.values_list('use_scope')
+    
     # 读取数据
     text = ""
     for item in data:
@@ -258,3 +262,62 @@ def word_cloud(request):
     wc.to_file('upload/word_cloud.png')
     # 返回图片地址
     return Response(data='http://127.0.0.1:8000/upload/word_cloud.png')
+
+# 搜索功能
+@api_view(['GET'])
+def search(request):
+    # 获取搜索关键字
+    name = request.GET.get('name')
+    type = request.GET.get('type')
+    factory = request.GET.get('factory')
+    series = request.GET.get('series')
+    use_scope = request.GET.get('use_scope')
+    address = request.GET.get('address')
+    # 获取页码
+    page = request.GET.get('page')
+    # 获取每页显示的数量
+    page_size = request.GET.get('page_size')
+    # 根据关键字查询
+    if name != "":
+        goods_info = GoodsInfo.objects.filter(title__contains=name)
+    if type != "":
+        goods_info = GoodsDetail.objects.filter(type__contains=type)
+    if factory != "":
+        goods_info = GoodsDetail.objects.filter(factory_name__contains=factory)
+    if series != "":
+        goods_info = GoodsDetail.objects.filter(series__contains=series)
+    if use_scope != "":
+        goods_info = GoodsDetail.objects.filter(use_scope__contains=use_scope)
+    if address != "":
+        goods_info = GoodsInfo.objects.filter(address__contains=address)
+    # 分页
+    paginator = Paginator(goods_info, page_size)
+    # 获取第page页的内容
+    page_obj = paginator.get_page(page)
+    # 获取当前页码
+    current_page = page_obj.number
+    # 获取当前页码的数据
+    data = page_obj.object_list
+    # 获取总页数
+    total_page = paginator.num_pages
+    # 获取总数据量
+    total_count = paginator.count
+    # 将数据转换为json格式
+    res_data = []
+    for i in data:
+        detail = GoodsDetail.objects.get(id=i.id)
+        item = {
+            "id": i.id,
+            "title": i.title,
+            "price": i.price,
+            "address": i.address.replace('中国 ', ''),
+            "factory_name": i.factory_name,
+            "type": detail.type,
+            "series": detail.series,
+            "use_scope": detail.use_scope,
+            "link": i.link,
+            "wheel_type": detail.wheel_type,
+        }
+        res_data.append(item)
+
+    return Response(data={"data": res_data, "current_page": current_page, "total_page": total_page, "total_count": total_count})

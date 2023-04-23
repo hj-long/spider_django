@@ -9,4 +9,5 @@ urlpatterns = [
     path('count/', views.detail_count),
     path('get_data/', views.get_data),
     path('word_cloud/', views.word_cloud),
+    path('search/', views.search),
 ]

@@ -3,9 +3,9 @@ from dataToSql.models import GoodsInfo, GoodsDetail
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import wordcloud
-import matplotlib.pyplot as plt
 import jieba
 from django.core.paginator import Paginator
+import re
 
 
 
@@ -384,10 +384,38 @@ def recommend(request):
             if _s != '':
                 if is_in_range(slow_ratio, _s, 5, 5) is False:
                     continue
-        
+        # 计算得分
+        score = 0
+        if info.price != '':
+            price = info.price
+            price = price.replace('￥', '')
+            if '万' in price:
+                score += 10
+            else:
+                # 提取数字
+                price = re.findall(r"\d+\.?\d*", price)
+                price = float(price[0])
+                if 0.01 * price < 1:
+                    score += 1
+                else:
+                    score += 0.001 * price
+        if info.sale_sum != '' and info.sale_sum != '0':
+            sale = info.sale_sum
+            # 提取数字
+            if '万' in sale:
+                sale = re.findall(r"\d+\.?\d*", sale)
+                sale = float(sale[0])
+                score += sale
+            else:
+                if 0.001 * sale < 1:
+                    score += 1
+                else:
+                    score += 0.001 * sale
+            
         item = {
             "id": i.id,
             "price": info.price,
+            "sale_sum": info.sale_sum,
             "power": i.rating_power,
             "input_rev": i.input_rev,
             "output_rev": i.output_rev,
@@ -398,7 +426,9 @@ def recommend(request):
             "wheel_hard": i.wheel_hard,
             "layout": i.layout,
             "installation": i.installation,
+            "score": score,
         }
+        
         data.append(item)
     return Response(data=data)
 

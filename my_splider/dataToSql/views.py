@@ -267,12 +267,12 @@ def word_cloud(request):
 @api_view(['GET'])
 def search(request):
     # 获取搜索关键字
-    name = request.GET.get('name')
-    type = request.GET.get('type')
-    factory = request.GET.get('factory')
-    series = request.GET.get('series')
-    use_scope = request.GET.get('use_scope')
-    address = request.GET.get('address')
+    name = request.GET.get('name')  or ""
+    type = request.GET.get('type') or ""
+    factory = request.GET.get('factory') or ""
+    series = request.GET.get('series')  or ""
+    use_scope = request.GET.get('use_scope') or ""
+    address = request.GET.get('address')    or ""
     # 获取页码
     page = request.GET.get('page')
     # 获取每页显示的数量
@@ -283,7 +283,7 @@ def search(request):
     if type != "":
         goods_info = GoodsDetail.objects.filter(type__contains=type)
     if factory != "":
-        goods_info = GoodsDetail.objects.filter(factory_name__contains=factory)
+        goods_info = GoodsInfo.objects.filter(factory_name__contains=factory)
     if series != "":
         goods_info = GoodsDetail.objects.filter(series__contains=series)
     if use_scope != "":
@@ -306,16 +306,17 @@ def search(request):
     res_data = []
     for i in data:
         detail = GoodsDetail.objects.get(id=i.id)
+        info = GoodsInfo.objects.get(id=i.id)
         item = {
             "id": i.id,
-            "title": i.title,
-            "price": i.price,
-            "address": i.address.replace('中国 ', ''),
-            "factory_name": i.factory_name,
+            "title": info.title,
+            "price": info.price,
+            "address": info.address.replace('中国 ', ''),
+            "factory_name": info.factory_name,
             "type": detail.type,
             "series": detail.series,
             "use_scope": detail.use_scope,
-            "link": i.link,
+            "link": info.link,
             "wheel_type": detail.wheel_type,
         }
         res_data.append(item)

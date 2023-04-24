@@ -14,7 +14,14 @@ class Command(BaseCommand):
         # 从数据库中读取处理数据
         goods_info = GoodsDetail.objects.all()
 
-
+        # 处理 series 的中文数据
+        for i in goods_info:
+            series = i.series
+            if series is not None:
+                if re.search(r'[\u4e00-\u9fa5]', series):
+                    print(i.id, series)
+                    i.series = 0
+                    i.save()
 
         # 处理 allowable_torque 的数据
         # for i in goods_info:

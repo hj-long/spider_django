@@ -281,7 +281,7 @@ def search(request):
     if name != "":
         goods_info = GoodsInfo.objects.filter(title__contains=name)
     if type != "":
-        goods_info = GoodsDetail.objects.filter(type__contains=type)
+        goods_info = GoodsDetail.objects.filter(type_num__contains=type)
     if factory != "":
         goods_info = GoodsInfo.objects.filter(factory_name__contains=factory)
     if series != "":
@@ -313,7 +313,7 @@ def search(request):
             "price": info.price,
             "address": info.address.replace('中国 ', ''),
             "factory_name": info.factory_name,
-            "type": detail.type,
+            "type": detail.type_num,
             "series": detail.series,
             "use_scope": detail.use_scope,
             "link": info.link,
@@ -322,3 +322,109 @@ def search(request):
         res_data.append(item)
 
     return Response(data={"data": res_data, "current_page": current_page, "total_page": total_page, "total_count": total_count})
+
+
+# 智能推荐
+@api_view(['GET'])
+def recommend(request):
+    # 获取搜索关键字
+    power = request.GET.get('power') or ""
+    input_rev = request.GET.get('input_rev') or ""
+    output_rev = request.GET.get('output_rev') or ""
+    allow_torque = request.GET.get('allow_torque') or ""
+    slow_ratio = request.GET.get('slow_ratio') or ""
+    series = request.GET.get('series') or ""
+
+    # 先根据series查询,再根据其他参数查询
+    if series != "":
+        goods_info = GoodsDetail.objects.filter(series__contains=series)
+    else:
+        return Response('can not find series')
+    
+    # 整理数据
+    data = []
+    for i in goods_info:
+        info = GoodsInfo.objects.get(id=i.id)
+        # 判断 power 是否在范围内
+        if power != "":
+            power = float(power)
+            _p = i.rating_power        
+            if _p != '':
+                if is_in_range(power, _p, 5, 5) is False:
+                    continue
+
+        # 判断 input_rev 是否在范围内
+        if input_rev != "":
+            input_rev = float(input_rev)
+            _i = i.input_rev
+            if _i != '':
+                if is_in_range(input_rev, _i, 100, 100) is False:
+                    continue
+
+        # 判断 output_rev 是否在范围内
+        if output_rev != "":
+            output_rev = float(output_rev)
+            _o = i.output_rev
+            if _o != '':
+                if is_in_range(output_rev, _o, 30, 30) is False:
+                    continue
+
+        # 判断 allow_torque 是否在范围内
+        if allow_torque != "":
+            allow_torque = float(allow_torque)
+            _a = i.allowable_torque
+            if _a != '':
+                if is_in_range(allow_torque, _a, 100, 100) is False:
+                    continue
+
+        # 判断 slow_ratio 是否在范围内
+        if slow_ratio != "":
+            slow_ratio = float(slow_ratio)
+            _s = i.slow_ratio
+            if _s != '':
+                if is_in_range(slow_ratio, _s, 5, 5) is False:
+                    continue
+        
+        item = {
+            "id": i.id,
+            "price": info.price,
+            "power": i.rating_power,
+            "input_rev": i.input_rev,
+            "output_rev": i.output_rev,
+            "allow_torque": i.allowable_torque,
+            "slow_ratio": i.slow_ratio,
+            "series": i.series,
+            "type": i.type_num,
+            "wheel_hard": i.wheel_hard,
+            "layout": i.layout,
+            "installation": i.installation,
+        }
+        data.append(item)
+    return Response(data=data)
+
+
+
+# 判断是否在范围内 data:参数数字 value:数据库字段值字符串 min: 最小范围 max: 最大范围
+def is_in_range(data, value, min=0, max=0):
+    # 判断 value 是否是数字，如果不是数字，可能是范围值，如果不是数字也不是范围值，直接返回 False
+    if value is not None:
+        try:
+            value = float(value)
+            # 判断 value 是否在范围内
+            if data - min > value or data + max < value:
+                return False
+        except:
+            # 看看是否为范围值，如 0.75-1.5、0.75~1.5
+            if '-' in value:
+                value = value.split('-')
+                if data >= float(value[1]) or data <= float(value[0]):   
+                    return False
+            elif '~' in value:
+                value = value.split('~')
+                if data >= float(value[1]) or data <= float(value[0]):   
+                    return False
+            else:
+                return False
+    else:
+        return False
+    return True

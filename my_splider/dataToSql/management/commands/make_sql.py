@@ -12,16 +12,23 @@ class Command(BaseCommand):
     # 处理命令行逻辑
     def handle(self, *args, **options):
         # 从数据库中读取处理数据
-        goods_info = GoodsDetail.objects.all()
+        goods_info = GoodsDetail.objects.filter(series__contains='2')
 
-        # 处理 series 的中文数据
         for i in goods_info:
-            series = i.series
-            if series is not None:
-                if re.search(r'[\u4e00-\u9fa5]', series):
-                    print(i.id, series)
-                    i.series = 0
-                    i.save()
+            score = 0
+            power = i.rating_power
+            if power != '':
+                score += 1
+            torque = i.allowable_torque
+            if torque != '':
+                score += 1
+            output_rev = i.output_rev
+            if output_rev != '':
+                score += 1
+            input_rev = i.input_rev
+            if input_rev != '':
+                score += 1
+            print(i.id, score)
 
         # 处理 allowable_torque 的数据
         # for i in goods_info:

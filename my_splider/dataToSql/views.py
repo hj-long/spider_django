@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import wordcloud
 import jieba
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import re
 
 
@@ -340,10 +340,13 @@ def recommend(request):
         goods_info = GoodsDetail.objects.filter(series__contains=series)
     else:
         return Response('can not find series')
-    
+
     # 整理数据
     data = []
     for i in goods_info:
+        # 得分
+        score = 0
+
         info = GoodsInfo.objects.get(id=i.id)
         # 判断 power 是否在范围内
         if power != "":
@@ -352,6 +355,10 @@ def recommend(request):
             if _p != '':
                 if is_in_range(power, _p, 5, 5) is False:
                     continue
+                else:
+                    score += 1
+            elif _p == '0':
+                score -= 0.5
 
         # 判断 input_rev 是否在范围内
         if input_rev != "":
@@ -360,6 +367,10 @@ def recommend(request):
             if _i != '':
                 if is_in_range(input_rev, _i, 100, 100) is False:
                     continue
+                else:
+                    score += 1
+            elif _i == '0':
+                score -= 0.5
 
         # 判断 output_rev 是否在范围内
         if output_rev != "":
@@ -368,6 +379,10 @@ def recommend(request):
             if _o != '':
                 if is_in_range(output_rev, _o, 30, 30) is False:
                     continue
+                else:
+                    score += 1
+            elif _o == '0':
+                score -= 0.5
 
         # 判断 allow_torque 是否在范围内
         if allow_torque != "":
@@ -376,6 +391,10 @@ def recommend(request):
             if _a != '':
                 if is_in_range(allow_torque, _a, 100, 100) is False:
                     continue
+                else:
+                    score += 1
+            elif _a == '0':
+                score -= 0.5
 
         # 判断 slow_ratio 是否在范围内
         if slow_ratio != "":
@@ -384,13 +403,18 @@ def recommend(request):
             if _s != '':
                 if is_in_range(slow_ratio, _s, 5, 5) is False:
                     continue
-        # 计算得分
-        score = 0
+                else:
+                    score += 1
+            elif _s == '0':
+                score -= 0.5
+
+        # 计算价格和销售量得分
         if info.price != '':
             price = info.price
             price = price.replace('￥', '')
+            price = price.replace('¥', '')
             if '万' in price:
-                score += 10
+                score += 5
             else:
                 # 提取数字
                 price = re.findall(r"\d+\.?\d*", price)
@@ -398,7 +422,7 @@ def recommend(request):
                 if 0.01 * price < 1:
                     score += 1
                 else:
-                    score += 0.001 * price
+                    score += 2
         if info.sale_sum != '' and info.sale_sum != '0':
             sale = info.sale_sum
             # 提取数字
@@ -407,10 +431,12 @@ def recommend(request):
                 sale = float(sale[0])
                 score += sale
             else:
-                if 0.001 * sale < 1:
+                sale = re.findall(r"\d+\.?\d*", sale)
+                sale = float(sale[0])
+                if 0.01 * sale < 1:
                     score += 1
                 else:
-                    score += 0.001 * sale
+                    score += 2
             
         item = {
             "id": i.id,
@@ -426,11 +452,61 @@ def recommend(request):
             "wheel_hard": i.wheel_hard,
             "layout": i.layout,
             "installation": i.installation,
-            "score": score,
+            "score": format(score, '.2f')
         }
-        
         data.append(item)
-    return Response(data=data)
+    # 按得分排序
+    data = sorted(data, key=lambda x: x['score'], reverse=True)
+    # 如果参数 flag 为 1，返回前 15 条数据
+    flag = request.GET.get('flag') or ""
+    if flag == '1':
+        data = data[:15]
+        # 统计power、input_rev、output_rev、id
+        power_list = []
+        input_rev_list = []
+        output_rev_list = []
+        num_list = []
+        for i in data:
+            power1 = i['power']
+            input_rev1 = i['input_rev']
+            output_rev1 = i['output_rev']
+            power_list.append(to_OK(power1, power))
+            input_rev_list.append(to_OK(input_rev1, input_rev))
+            output_rev_list.append(to_OK(output_rev1, output_rev))
+            num_list.append(i['id'])
+        return Response(data={"data":data, "power":power_list, "input_rev":input_rev_list, "output_rev":output_rev_list, "num":num_list})
+
+    else: 
+        return Response(data={"data":data})
+
+
+# 数字正常处理
+def to_OK(data, num=0):
+    if data != '' and data is not None:
+        try:
+            data = float(data)
+            return data
+        except:
+            if '-' in data:
+                data = data.split('-')
+                if float(data[0]) < 1:
+                    if num > 0:
+                        return num
+                    else:
+                        return data[1]
+                else:
+                    return data[0]
+            elif '~' in data:
+                data = data.split('~')
+                if float(data[0]) < 1:
+                    if num > 0:
+                        return num
+                    else:
+                        return data[1]
+                else:
+                    return data[0]
+    return data
+
 
 
 

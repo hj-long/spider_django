@@ -479,7 +479,6 @@ def recommend(request):
     else: 
         return Response(data={"data":data})
 
-
 # 数字正常处理
 def to_OK(data, num=0):
     if data != '' and data is not None:
@@ -507,9 +506,6 @@ def to_OK(data, num=0):
                     return data[0]
     return data
 
-
-
-
 # 判断是否在范围内 data:参数数字 value:数据库字段值字符串 min: 最小范围 max: 最大范围
 def is_in_range(data, value, min=0, max=0):
     # 判断 value 是否是数字，如果不是数字，可能是范围值，如果不是数字也不是范围值，直接返回 False
@@ -534,3 +530,4 @@ def is_in_range(data, value, min=0, max=0):
     else:
         return False
     return True
+

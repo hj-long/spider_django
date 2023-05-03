@@ -494,7 +494,7 @@ def to_OK(data, num=0):
                     else:
                         return data[1]
                 else:
-                    return data[0]
+                    return float(data[0])
             elif '~' in data:
                 data = data.split('~')
                 if float(data[0]) < 1:
@@ -503,8 +503,8 @@ def to_OK(data, num=0):
                     else:
                         return data[1]
                 else:
-                    return data[0]
-    return data
+                    return float(data[0])
+    return float(data)
 
 # 判断是否在范围内 data:参数数字 value:数据库字段值字符串 min: 最小范围 max: 最大范围
 def is_in_range(data, value, min=0, max=0):
